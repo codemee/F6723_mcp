@@ -1,0 +1,18 @@
+{
+  "mcp_servers": {
+      "chrome-devtools": {
+        "command": "npx",
+        "args": [
+          "-y", 
+          "chrome-devtools-mcp@latest"
+        ]
+      },
+      "openclaw Docs": {
+          "url": "https://gitmcp.io/openclaw/openclaw"
+      },
+      "everything-streamable-http": {
+        "type": "http",
+        "url": "http://localhost:3002/mcp"
+      }
+  }
+}

@@ -11,3 +11,8 @@ wheels/
 
 # environments
 .env
+
+#mcp
+mcp_servers.json
+
+# pickle
