@@ -100,7 +100,8 @@ async def chat(
             hook(response)
 
 def show_text(response: genai.types.GenerateContentResponse):
-    console.print(Markdown(response.text))
+    if response.text:
+        console.print(Markdown(response.text))
 
 def show_afc(response: genai.types.GenerateContentResponse):
     if not response.automatic_function_calling_history:

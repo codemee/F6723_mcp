@@ -21,7 +21,7 @@ load_dotenv()
 client = genai.Client()
 async_exit_stack = AsyncExitStack()
 console = Console()
-
+hist_file = "chat_hist.pkl"
 async def get_remote_mcp_session(info:dict) -> ClientSession:
     if info.get("type", None) == "http":
         read, write, _ = (
@@ -82,13 +82,14 @@ async def chat(
         Callable[[genai.types.GenerateContentResponse], None]
     ]
 ):
-    if os.path.exists('resume.pkl'):
-        with open('resume.pkl', 'rb') as f:
+    if os.path.exists(hist_file):
+        with open(hist_file, 'rb') as f:
             history = pickle.load(f)
     else:
         history = None
+
     chat = client.aio.chats.create(
-        model="gemini-3-pro-preview",
+        model="gemini-2.5-flash",
         config=genai.types.GenerateContentConfig(
             tools=tools + sessions,
             system_instruction=(
@@ -100,6 +101,7 @@ async def chat(
         ),
         history=history
     )
+
     while True:
         prompt = console.input("請輸入訊息(按 ⏎ 結束): ")  
         if prompt.strip() == "":
@@ -107,8 +109,12 @@ async def chat(
         response = await chat.send_message(prompt)
         for hook in hooks:
             hook(response)
-    with open('resume.pkl', 'wb') as f:
-        pickle.dump(chat.get_history(), f)
+    
+    history = chat.get_history()
+    
+    if history:
+        with open(hist_file, 'wb') as f:
+            pickle.dump(history, f)
 
 def show_text(response: genai.types.GenerateContentResponse):
     console.print(Markdown(response.text))

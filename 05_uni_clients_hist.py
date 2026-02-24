@@ -86,7 +86,7 @@ async def chat(
             break
         history.append(prompt)
         response = await client.aio.models.generate_content(
-            model="gemini-3-pro-preview",
+            model="gemini-2.5-flash",
             contents=history,
             config=genai.types.GenerateContentConfig(
                 tools=sessions,
@@ -100,10 +100,16 @@ async def chat(
         )
         for hook in hooks:
             hook(response)
-        history.append(response.candidates[0].content)
+
+        if response.text:
+            history.append({
+                "role": "model",
+                "parts":[{"text": response.text}]
+            })
 
 def show_text(response: genai.types.GenerateContentResponse):
-    console.print(Markdown(response.text))
+    if response.text:
+        console.print(Markdown(response.text))
 
 def show_afc(response: genai.types.GenerateContentResponse):
     if not response.automatic_function_calling_history:

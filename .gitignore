@@ -16,3 +16,4 @@ wheels/
 mcp_servers.json
 
 # pickle
+*.pkl

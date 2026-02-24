@@ -87,7 +87,12 @@ async def chat(sessions: list[ClientSession]):
                     f"{time.strftime("%c", time.gmtime())}\n"
                     "請使用繁體中文"
                     "以 Markdown 格式回覆"
-                )
+                ),
+                # automatic_function_calling=( # 不要函式叫用歷史
+                #     genai.types.AutomaticFunctionCallingConfig(
+                #         ignore_call_history=True
+                #     )
+                # )
             ),
         )
         console.print(Markdown(response.text))

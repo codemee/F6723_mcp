@@ -22,6 +22,7 @@ load_dotenv()
 client = genai.Client()
 async_exit_stack = AsyncExitStack()
 console = Console()
+hist_file = "hist.pkl"
 
 async def get_remote_mcp_session(info:dict) -> ClientSession:
     if info.get("type", None) == "http":
@@ -83,8 +84,8 @@ async def chat(
         Callable[[genai.types.GenerateContentResponse], None]
     ]
 ):
-    if os.path.exists('resume.pkl'):
-        with open('resume.pkl', 'rb') as f:
+    if os.path.exists(hist_file):
+        with open(hist_file, 'rb') as f:
             history = pickle.load(f)
     else:
         history = []
@@ -93,6 +94,7 @@ async def chat(
         if prompt.strip() == "":
             break
         history.append(prompt)
+        text = ''
         async for response in await (
             client.aio.models.generate_content_stream(
                 # 目前 gemini-3 模型加上串流在 function calling 
@@ -111,11 +113,19 @@ async def chat(
                 )
             )
         ):
-            history.append(response.candidates[0].content)
+            text += response.text or ""
             for hook in hooks:
                 hook(response)
-    with open('resume.pkl', 'wb') as f:
-        pickle.dump(history, f)
+
+        if text:
+            history.append({
+                "role": "model",
+                "parts":[{"text": text}]
+            })
+
+    if history:
+        with open(hist_file, 'wb') as f:
+            pickle.dump(history, f)
 
 live: Live = None
 text: str = ""
