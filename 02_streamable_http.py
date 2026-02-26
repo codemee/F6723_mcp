@@ -10,31 +10,22 @@ dotenv.load_dotenv()
 console = Console()
 client = genai.Client()
 
-# 測試前要先把 MCP 伺服器跑起來
-# & {$env:PORT=3002;npx -y `
-# @modelcontextprotocol/server-everything streamableHttp} &
-
 async def run_sse():
-    # 建立連接 MCP 伺服器的用戶端
-    # 根據 MCP 伺服器執行的訊息取得位址
     async with streamable_http_client(
-        url="http://localhost:3002/mcp"
+        url="http://localhost:8080/mcp"
     ) as (read, write, _):
         async with ClientSession(read, write) as session:
-            # 連接 MCP 伺服器
+            # 連接 MCP 服器
             await session.initialize()
 
-            # 利用 MCP 伺服器提供的環境變數工具取得 PATH 內容
-            prompt = f"我的 PATH 包含哪些路徑？"
+            prompt = f"WBC 中華隊備戰狀況？"
             response = await client.aio.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=genai.types.GenerateContentConfig(
-                    temperature=0,
                     tools=[session],
                 ),
             )
-            # 通常都會生成 Markdown 內容
             console.print(Markdown(response.text))
 
 asyncio.run(run_sse())
