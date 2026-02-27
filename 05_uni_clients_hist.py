@@ -12,6 +12,7 @@ load_dotenv()
 client = genai.Client()
 console = Console()
 
+
 async def chat(
     sessions: list[ClientSession], 
     hooks: list[

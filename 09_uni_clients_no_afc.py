@@ -40,7 +40,6 @@ async def chat(
             contents = history + results
         else:
             contents += results
-        text = ''
         async for response in await (
             client.aio.models.generate_content_stream(
                 model="gemini-2.5-flash",
@@ -65,11 +64,11 @@ async def chat(
                 response, 
                 tools, sessions
             )
-            text += response.text or ""
             for hook in hooks:
                 hook(response)
 
-            history.append(response.candidates[0].content)
+            if not response.function_calls:
+                history.append(response.candidates[0].content)
 
     if history:
         with open(hist_file, 'wb') as f:
@@ -81,6 +80,8 @@ text: str = ""
 
 def show_text(response: genai.types.GenerateContentResponse):
     global live, text
+    if response.function_calls:
+        return
     if not live:
         live = Live(
             Markdown(""),
@@ -90,7 +91,7 @@ def show_text(response: genai.types.GenerateContentResponse):
         live.start()
     text += response.text or ""
     live.update(Markdown(text))
-    candidates = response.candidates or []
+    candidates = response.candidates
     if (
         candidates[0].finish_reason == 
         genai.types.FinishReason.STOP

@@ -15,12 +15,7 @@ from google_search import google_search
 load_dotenv()
 client = genai.Client()
 console = Console()
-afc_len = 0
 hist_file = "chat_hist.pkl"
-
-def set_afc_len(history:list[genai.types.Content]) -> int:
-    global afc_len
-    afc_len = len(history)
 
 async def chat(
     tools: list,
@@ -34,7 +29,6 @@ async def chat(
         console.print("接續對話")
         with open(hist_file, 'rb') as f:
             history = pickle.load(f)
-            set_afc_len(history)
 
     chat = client.aio.chats.create(
         model="gemini-2.5-flash",
@@ -69,6 +63,8 @@ text: str = ""
 
 def show_text(response: genai.types.GenerateContentResponse):
     global live, text
+    if response.function_calls:
+        return
     if not live:
         live = Live(
             Markdown(""),
@@ -78,7 +74,7 @@ def show_text(response: genai.types.GenerateContentResponse):
         live.start()
     text += response.text or ""
     live.update(Markdown(text))
-    candidates = response.candidates or []
+    candidates = response.candidates
     if (
         candidates[0].finish_reason == 
         genai.types.FinishReason.STOP
@@ -88,8 +84,7 @@ def show_text(response: genai.types.GenerateContentResponse):
         text = ""
 
 def show_afc(response: genai.types.GenerateContentResponse):
-    global afc_len
-    candidates = response.candidates or []
+    candidates = response.candidates
     if (
         not candidates[0].finish_reason == 
         genai.types.FinishReason.STOP
@@ -97,15 +92,12 @@ def show_afc(response: genai.types.GenerateContentResponse):
         return
     if not response.automatic_function_calling_history:
         return
-    for content in (
-        response.automatic_function_calling_history[afc_len:]
-    ):
-        for part in content.parts:
-            if part.function_call:
-                name = part.function_call.name
-                args = part.function_call.args
-                console.print(f" →{name}(**{args})")
-    afc_len = len(response.automatic_function_calling_history)
+    content = response.automatic_function_calling_history[-2]
+    for part in content.parts:
+        if part.function_call:
+            name = part.function_call.name
+            args = part.function_call.args
+            console.print(f" →{name}(**{args})")
 
 async def main():
     hooks = [show_afc, show_text]
