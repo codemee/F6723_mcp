@@ -13,6 +13,16 @@
     "brave-search": {
       "type": "http",
       "url": "http://localhost:8080/mcp"
+    },
+    "Brave Search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@brave/brave-search-mcp-server"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "BSAxAwP4IxG1WMqmnQ0gO2u1PdnEUXv"
+      }
     }
   }
 }

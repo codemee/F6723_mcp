@@ -58,14 +58,14 @@ async def chat(
         else:
             prompt = results
         async for response in await chat.send_message_stream(prompt):
+            for hook in hooks:
+                hook(response)
+    
             results = await call_functions(
                 response, 
                 tools, sessions, include_original_response=False
             )
 
-            for hook in hooks:
-                hook(response)
-    
     history = chat.get_history()
 
     if history:

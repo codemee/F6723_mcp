@@ -60,12 +60,13 @@ async def chat(
                 )
             )
         ):
+            for hook in hooks:
+                hook(response)
+
             results = await call_functions(
                 response, 
                 tools, sessions
             )
-            for hook in hooks:
-                hook(response)
 
             if not response.function_calls:
                 history.append(response.candidates[0].content)
@@ -73,7 +74,6 @@ async def chat(
     if history:
         with open(hist_file, 'wb') as f:
             pickle.dump(history, f)
-
 
 live: Live | None = None
 text: str = ""
